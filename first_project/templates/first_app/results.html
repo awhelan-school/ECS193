@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+  </head>
+  <body>
+    <h1>Results</h1>
+    <br>
+    <br>
+
+    {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+    <ul>
+      <li>{{topic}}</li>
+    </ul>
+    <p>{{query}}</p>
+
+    <ol>
+
+      <li> Score 1 </li>
+      <p> URL 1</p>
+
+      <li> Score 2 </li>
+      <p> URL 2</p>
+    </ol>
+
+
+    <!-- Back Home -->
+    <form class="" action="{% url 'first_app:make_query' %}">
+      <input type="submit" value="Back">
+    </form>
+
+  </body>
+</html>

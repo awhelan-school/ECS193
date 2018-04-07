@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Make Query</title>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+  </head>
+
+  <body>
+
+    <div class="container">
+      <h1> Make A Query! </h1>
+      <form method="POST">
+
+        {{ form.as_p }}
+        {% csrf_token %}
+        <input type="submit" class='btb btb-primary' value="Submit!">
+      </form>
+
+    </div>
+
+    <br>
+    <form action="{% url 'first_app:home' %}">
+      <input type="submit" value="Back">
+    </form>
+
+
+
+    <!--
+
+    <form action="{% url 'first_app:results' %}" method="POST">
+    {% csrf_token %}
+        Topic to Query:
+        <br>
+
+        <select name="sel_topic">
+
+
+          {% for t in topic %}
+            <option value="{{t}}">{{t}}</option>
+          {% endfor %}
+
+        </select>
+
+        <br>
+        Query to Make:
+        <br>
+        <textarea rows="4" cols="50" name="input_text" required ></textarea>
+        <br>
+
+    <input type="submit" value="Query" />
+    </form>
+
+    -->
+
+
+
+  </body>
+</html>

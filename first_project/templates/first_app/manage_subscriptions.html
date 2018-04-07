@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Manage Subscriptions</title>
+  </head>
+  <body>
+
+      <h2> Add Subscription</h2>
+      <form action = "{% url 'first_app:manage_subscriptions' %}" method="POST">
+        {% csrf_token %}
+        Topic:
+        <input type="text" name="sub_topic" value="">
+        <input type="submit" name="subscribe" value="Subscribe!">
+      </form>
+
+      <h2> Remove Subscription </h2>
+      <form action = "{% url 'first_app:manage_subscriptions' %}" method="POST">
+        {% csrf_token %}
+        <select name="cancel_sub">
+
+          <!-- For Loop over topics -->
+          {% for t in topic %}
+            <option value="{{t}}">{{t}}</option>
+          {% endfor %}
+
+        </select>
+        <input type="submit" name="cancel" value="Unsubscribe">
+      </form>
+
+      <br>
+      <br>
+      <form class="" action="{% url 'first_app:home' %}">
+        <input type="submit" value="Back">
+      </form>
+
+  </body>
+</html>
