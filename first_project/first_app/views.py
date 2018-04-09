@@ -7,10 +7,20 @@ from django.urls import reverse
 from django.views import generic
 
 # Import The Models
-from first_app.models import Topic, Query
+from first_app.models import Topic, Query, Article
 
 # Import Forms
 from first_app.forms import QueryForm
+
+# ROOT Folder for Documents
+from django.conf import settings
+import os, sys
+
+# Doc2Vec Imports
+import gensim
+import collections
+import smart_open
+import random
 
 def index(request):
     dict = {'insert_var': 'Value from algo computation from views.py ' + str(request)}
@@ -23,6 +33,41 @@ def help(request):
 
 def home(request):
     return render(request, 'first_app/home.html')
+
+def update_model(request):
+
+    print("Inside update View")
+
+    # Populate The databases
+    N = 0
+
+    while(1):
+        try:
+            # Read All Files
+            path = os.path.join(settings.BASE_DIR ,'documents/articles/Article_'+str(N))
+
+            f = open(path, 'r')
+            author = f.readline()
+            id = f.readline()
+            url = f.readline()
+            url = url.rstrip('\n')
+
+
+            topic = f.readline()
+            summary = f.readline()
+            content = f.readline()
+            N += 1
+
+            try:
+                Article.objects.get_or_create(author = author, id = id, url = url,
+                topic = topic, summary = summary, content = content, path = path)
+            except:
+                pass
+        except:
+            print("File does not exist\n")
+            break
+
+    return render(request, 'first_app/update_model.html')
 
 def manage_subscriptions(request):
 
@@ -77,8 +122,28 @@ def make_query(request):
         if form.is_valid():
             form.save(commit=True)
 
+            # Load Model and Get Top 3 Similar Articles
+            model = gensim.models.doc2vec.Doc2Vec.load(os.path.join(settings.BASE_DIR ,'documents/model'))
+
+            # Set Seed to add determinism
+            model.random.seed(0)
+
+            # Pre-Process Text and get embedding
+            opinion = request.POST['opinion']
+            opinion = opinion.split()
+            inferred_vector = model.infer_vector(opinion)
+            sims = model.docvecs.most_similar([inferred_vector])
+
+
             cd = {'topic': Topic.objects.get(pk=request.POST['topic']),
-                  'query': request.POST['opinion']}
+                  'query': request.POST['opinion'],
+                  'S1': sims[0][1], 'S2': sims[1][1], 'S3': sims[2][1],
+                  'S1F': Article.objects.get(pk=sims[0][0]),
+                  'S2F': Article.objects.get(pk=sims[1][0]),
+                  'S3F': Article.objects.get(pk=sims[2][0]), }
+
+            # Format for S{N}
+            # (Article_ID, SCORE)
 
             return render(request, 'first_app/results.html', context=cd)
             #return redirect('first_app:results')

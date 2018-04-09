@@ -7,6 +7,7 @@ urlpatterns = [
     url(r'^$', views.home, name='home'),
     url(r'manage_subscriptions$', views.manage_subscriptions, name='manage_subscriptions'),
     url(r'make_query$', views.make_query, name='make_query'),
+    url(r'update_model$', views.update_model, name='update_model'),
     url(r'results', views.results, name='results'),
     url(r'help$', views.help, name='help'),
 ]
