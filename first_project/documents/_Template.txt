@@ -1,0 +1,6 @@
+Author
+ID
+URL
+Topic
+Summary
+Content
