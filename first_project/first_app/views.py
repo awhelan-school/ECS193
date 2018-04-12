@@ -1,10 +1,14 @@
 from django.shortcuts import render
 from django.http import HttpResponse
+# Background Tasks
+
 
 from django.shortcuts import get_object_or_404, redirect
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.views import generic
+
+
 
 # Import The Models
 from first_app.models import Topic, Query, Article
@@ -34,7 +38,22 @@ def help(request):
 def home(request):
     return render(request, 'first_app/home.html')
 
+import subprocess
+
 def update_model(request):
+
+
+    path = os.path.join(settings.BASE_DIR, 'documents/doc2vec.py')
+    #try:
+        #os.system("/Users/Whelan/anaconda3/bin/python3.6 "+ str(path)) + " &"
+    #os.spawnl(os.P_NOWAIT, "/Users/Whelan/anaconda3/bin/python3.6 "+ str(path))
+
+
+    process = subprocess.Popen(['/Users/Whelan/anaconda3/bin/python3.6', 'documents/doc2vec.py',],
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        #print("Process Spawned!\n")
+    #except:
+        #print('Unable to run model change\n')
 
     print("Inside update View")
 
