@@ -3,9 +3,130 @@
 import gensim
 import os
 import sys
-import collections
+from collections import *
 import smart_open
 import random
+import matplotlib.pyplot as plt
+import math
+
+
+def plot_distribution(corpus):
+
+    doc_count = len(corpus)
+    doc_length =[]
+
+    for index in range(0, doc_count):
+        doc_length.append(len(corpus[index].words))
+
+    num_bins = 200
+    n, bins, patches = plt.hist(doc_length, bins='auto', facecolor='blue',
+                                alpha=None, histtype='barstacked', edgecolor='black')
+
+    plt.xlabel('Document Text Length')
+    plt.ylabel('Document Count')
+    plt.title('Document Text Length Distribution')
+    plt.show()
+
+def test_conv(model, corpus):
+
+    #corpus = corpus[:150]
+
+    sample_taken = 0
+
+    doc_count = len(corpus)
+
+    doc_index = 0
+    sample_size = 10
+    # Sample Text to match
+    avg_text_length = 0
+
+    # Total Words in All articles
+    total_words = 0
+
+    # Track SIMILAR
+    sim_dict = defaultdict(lambda:0)
+    sample_dict = OrderedDict()
+    score_dict = OrderedDict()
+
+    while(doc_index < doc_count):
+
+        total_words += len(corpus[doc_index].words)
+
+        while(sample_size < len(corpus[doc_index].words)):
+
+            sample_taken += 1.0
+            try:
+                sample_dict[sample_size] += 1
+            except:
+                sample_dict[sample_size] = 1
+
+            # Test Similarity with variable sample text size
+            sample_text = corpus[doc_index].words
+            model.random.seed(0)
+            inferred_vector = model.infer_vector(sample_text[0:sample_size])
+            sims = model.docvecs.most_similar([inferred_vector], topn=1)
+
+            # If prediction is correct, break to next article
+            if(sims[0][0] == doc_index):
+
+                score = sims[0][1]
+
+                # Add Score Value at N Sample text Size
+                try:
+                    score_dict[sample_size] += score
+                except:
+                    score_dict[sample_size] = score
+
+
+                avg_text_length += sample_size/sample_taken
+                # Add Similar Score if correct
+                sim_dict[sample_size] += sims[0][1] / doc_count
+                sample_size += 10
+            # Otherwise increase sample text size
+            else:
+                sample_size += 10
+
+
+        # Next Document
+        sample_taken = 0
+        doc_index += 1
+        sample_size = 10
+
+    avg_doc_length = math.floor(total_words/doc_count)
+
+    print(avg_text_length/doc_count)
+    print(avg_doc_length)
+
+    # For Graph
+    # sample size list - X axis
+    samples = []
+    # Similarity Score - Y Axis
+    sim_score = []
+
+    x = 10
+
+    while(x < avg_doc_length):
+        samples.append(x)
+        sim_score.append(score_dict[x]/sample_dict[x])
+        x += 10
+
+    # plotting the points
+    plt.plot(samples, sim_score)
+
+    # naming the x axis
+    plt.xlabel('Sample Text Size')
+    # naming the y axis
+    plt.ylabel('Similarity Score')
+
+    # giving a title to my graph
+    plt.title('Similarity Score Based on Text Sample')
+
+    # function to show the plot
+    plt.show()
+
+
+
+
 
 def read_corpus(fname, tokens_only=False):
     with smart_open.smart_open(fname, encoding="iso-8859-1") as f:
@@ -24,7 +145,7 @@ def doc2vec(inputText):
     lee_test_file = test_data_dir + os.sep + 'lee.cor'
 
 
-    tax_train_file = './cnn.bank2'
+    tax_train_file = './Article.bank'
 
     # Read In URL File and Store in Dictionary for coupling at output
     f_url = open('url.txt', 'r')
@@ -43,65 +164,20 @@ def doc2vec(inputText):
     print(len(train_corpus))
 
 
-    # Train the Initial Model
-    model = gensim.models.doc2vec.Doc2Vec(vector_size=50, min_count=2, epochs=55, seed=0)
-    model.build_vocab(train_corpus)
-    model.train(train_corpus, total_examples=model.corpus_count, epochs=model.epochs)
+    try:
+        model = gensim.models.doc2vec.Doc2Vec.load('model')
+        print("Loaded Existing Model.\n")
+    except:
+        print("No Previous Model Saved!\nTraining New Model.\n")
+        # Train the Initial Model
+        model = gensim.models.doc2vec.Doc2Vec(vector_size=300, min_count=2, epochs=100, seed=0)
+        model.build_vocab(train_corpus)
+        model.train(train_corpus, total_examples=model.corpus_count, epochs=model.epochs)
 
     model.save('model')
-    seed = 0]
+    test_conv(model, train_corpus)
+    #plot_distribution(corpus=train_corpus)
 
     #test = train_corpus[299].words
-
-    '''
-    while(1):
-        # Input Function -> Parse the input text as seperate tokens
-
-        text = input('Enter Text to Compare: ')
-        parsed = text.split()
-        print(parsed)
-
-        if(parsed != []):
-
-            model.random.seed(0)
-            inferred_vector = model.infer_vector(parsed)
-            sims = model.docvecs.most_similar([inferred_vector])
-
-            print(type(inferred_vector))
-            print('Inferred Vector ====> ', inferred_vector)
-
-            print(type(sims), sims)
-            print('Similar ====>', sims[0])
-            #print(train_corpus[sims[0][0]].words)
-
-        else:
-            inferred_vector = model.infer_vector(['only', 'you', 'can', 'prevent', 'forest', 'fires', 'when', 'there', 'is', 'disasters',\
-                                              'it', 'becomes', 'our', 'obligation', 'to', 'help', 'and', 'alleviate', 'with', 'some', 'sort', 'of', 'funding', 'or',\
-                                              'other', 'ways', 'which', 'may', 'benefit', 'those', 'who', 'are', 'in', 'need'])
-            sims = model.docvecs.most_similar([inferred_vector], topn=len(model.docvecs))
-
-    '''
-
-    '''
-    # Calculate Similarity Index above a certain threshold value
-    index = 0
-    sample = 0
-    while(1):
-        if(sims[index][1] > 0.65):
-            # Output if similarity index is above threshold value
-            #print('Document ({}): <{}>\n'.format(1337, ' '.join(parsed)))
-            print(u'SIMILAR/DISSIMILAR DOCS PER MODEL %s:\n' % model)
-            for label, index in [('MOST', 0), ('2nd', 1), ('3rd', 2)]:
-                print(u'%s %s: <%s>\n' % (label, url[sims[index][0]], ' '.join(train_corpus[sims[index][0]].words)))
-            break
-        else:
-            # Retrain the model
-            print(sample, sims[index][1])
-            sample += 1
-            model = gensim.models.doc2vec.Doc2Vec(vector_size=50, min_count=2, epochs=55)
-            model.build_vocab(train_corpus)
-            model.train(train_corpus, total_examples=model.corpus_count, epochs=model.epochs)
-            sims = model.docvecs.most_similar([inferred_vector], topn=len(model.docvecs))
-    '''
 
 doc2vec('empty')
