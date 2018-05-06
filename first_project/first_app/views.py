@@ -11,7 +11,7 @@ from django.views import generic
 
 
 # Import The Models
-from first_app.models import Topic, Query, Article
+from first_app.models import Topic, Query, Article, ModelInfo
 
 # Import Forms
 from first_app.forms import QueryForm
@@ -43,6 +43,15 @@ import subprocess
 def update_model(request):
 
 
+    subscriptions_list = []
+    topics = Topic.objects.all()
+
+    for t in topics:
+        subscriptions_list.append(t.topic_name)
+
+    print("All subscriptions")
+    print(subscriptions_list)
+
     path = os.path.join(settings.BASE_DIR, 'documents/doc2vec.py')
     #try:
         #os.system("/Users/Whelan/anaconda3/bin/python3.6 "+ str(path)) + " &"
@@ -57,8 +66,25 @@ def update_model(request):
 
     print("Inside update View")
 
+    info = ModelInfo.load()
+    print("INFO: \n")
+    print(info.article_count, info.version)
+
+
     # Populate The databases
-    N = 0
+    N = info.article_count
+
+    # id
+    # Keyword
+    # Title
+
+    # Source
+    # URL
+    # Date
+
+    # Author
+    # Summary
+    # Content
 
     while(1):
         try:
@@ -66,25 +92,33 @@ def update_model(request):
             path = os.path.join(settings.BASE_DIR ,'documents/articles/Article_'+str(N))
 
             f = open(path, 'r')
-            author = f.readline()
+
             id = f.readline()
+            key = f.readline()
+            title = f.readline()
+            source = f.readline()
             url = f.readline()
             url = url.rstrip('\n')
+            date = f.readline()
 
-
-            topic = f.readline()
+            author = f.readline()
             summary = f.readline()
             content = f.readline()
             N += 1
 
             try:
-                Article.objects.get_or_create(author = author, id = id, url = url,
-                topic = topic, summary = summary, content = content, path = path)
+                Article.objects.get_or_create(id = id, keyword = key, title = title, source = source,
+                                              url = url, date = date,
+                                              author=author, summary = summary, content = content)
             except:
                 pass
         except:
-            print("File does not exist\n")
+            print("File %s does not exist\n" % N)
             break
+
+    info.article_count = N
+    info.version += 1
+    ModelInfo.save(info)
 
     return render(request, 'first_app/update_model.html')
 
@@ -141,8 +175,15 @@ def make_query(request):
         if form.is_valid():
             form.save(commit=True)
 
-            # Load Model and Get Top 3 Similar Articles
-            model = gensim.models.doc2vec.Doc2Vec.load(os.path.join(settings.BASE_DIR ,'documents/model'))
+
+            try:
+                # Load New Model if Exists
+                print("Using Update Model\n")
+                model = gensim.models.doc2vec.Doc2Vec.load(os.path.join(settings.BASE_DIR, 'documents/model_new'))
+            except:
+                # Load Model and Get Top 3 Similar Articles
+                print("Using Base Model\n")
+                model = gensim.models.doc2vec.Doc2Vec.load(os.path.join(settings.BASE_DIR ,'documents/model_base'))
 
             # Set Seed to add determinism
             model.random.seed(0)

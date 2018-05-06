@@ -21,19 +21,49 @@ class AccessRecord(models.Model):
         return str(self.date)
 
 class Article(models.Model):
-    # Author
-    author = models.CharField(max_length=128)
     # Article ID
     id = models.IntegerField(unique=True, primary_key=True)
+    # Keyword
+    keyword = models.CharField(max_length=128)
+    # Title
+    title = models.CharField(max_length=128)
+    # Source
+    source = models.CharField(max_length=128)
     # Link to Article
     url = models.URLField(max_length=256)
-    # Article topic
-    topic = models.CharField(max_length=64)
+    # Date of Article
+    date = models.DateField()
+    # Author
+    author = models.CharField(max_length=128)
     # Article Summary
     summary = models.TextField()
     # Full text
     content = models.TextField()
-    # File Path
-    path = models.CharField(max_length=128)
     # Vector Embedding
     # embedding = models.CharField(max_length = 512)
+
+# id
+# Keyword
+# Title
+# Source
+# URL
+# Date
+# Author
+# Summary
+# Content
+
+class ModelInfo(models.Model):
+    article_count = models.IntegerField(unique=True)
+    version = models.IntegerField()
+
+
+    def save(self, *args, **kwargs):
+        self.__class__.objects.exclude(id=self.id).delete()
+        super(ModelInfo, self).save(*args, **kwargs)
+
+    @classmethod
+    def load(cls):
+        try:
+            return cls.objects.get()
+        except cls.DoesNotExist:
+            return cls()
