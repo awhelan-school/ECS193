@@ -33,10 +33,20 @@ def updateDataBase():
     print(info.article_count, info.version)
 
     # Populate The databases
-    N = info.article_count
+    N = 0
+
+    # Load New Model if Exists
+    model = gensim.models.doc2vec.Doc2Vec.load(os.path.join(settings.BASE_DIR, 'documents/model_newest'))
+    bank = open('./documents/web/Articles.bank')
 
     while(1):
         try:
+
+            content = bank.readline()
+            content = content.split()
+            inferred_vector = model.infer_vector(content)
+
+
             # Read All Files
             path = os.path.join(settings.BASE_DIR ,'documents/web/article/Article_'+str(N))
 
@@ -52,13 +62,16 @@ def updateDataBase():
 
             author = f.readline()
             summary = f.readline()
-            content = f.readline()
+
             N += 1
+
+
 
             try:
                 Article.objects.get_or_create(id = id, keyword = key, title = title, source = source,
                                               url = url, date = date,
-                                              author=author, summary = summary, content = content)
+                                              author=author, summary = summary,
+                                              embedding = str(inferred_vector))
             except:
                 pass
         except:
@@ -123,8 +136,6 @@ def update_model(request):
     except:
         print("Subprocess Not Initiated\n")
 
-
-    updateDataBase()
 
     return render(request, 'first_app/update_model.html')
 
