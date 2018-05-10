@@ -26,70 +26,19 @@ import collections
 import smart_open
 import random
 
-def index(request):
-    dict = {'insert_var': 'Value from algo computation from views.py ' + str(request)}
-    return render(request, 'first_app/index.html', context=dict)
-
-def help(request):
-    help_dict = {'page_index': request}
-    return render(request, 'first_app/help.html', context=help_dict)
-# Create your views here.
-
-def home(request):
-    return render(request, 'first_app/home.html')
-
-import subprocess
-
-def update_model(request):
-
-
-    subscriptions_list = []
-    topics = Topic.objects.all()
-
-    for t in topics:
-        subscriptions_list.append(t.topic_name)
-
-    print("All subscriptions")
-    print(subscriptions_list)
-
-    path = os.path.join(settings.BASE_DIR, 'documents/doc2vec.py')
-    #try:
-        #os.system("/Users/Whelan/anaconda3/bin/python3.6 "+ str(path)) + " &"
-    #os.spawnl(os.P_NOWAIT, "/Users/Whelan/anaconda3/bin/python3.6 "+ str(path))
-
-
-    process = subprocess.Popen(['/Users/Whelan/anaconda3/bin/python3.6', 'documents/doc2vec.py',],
-                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        #print("Process Spawned!\n")
-    #except:
-        #print('Unable to run model change\n')
-
-    print("Inside update View")
+def updateDataBase():
 
     info = ModelInfo.load()
     print("INFO: \n")
     print(info.article_count, info.version)
 
-
     # Populate The databases
     N = info.article_count
-
-    # id
-    # Keyword
-    # Title
-
-    # Source
-    # URL
-    # Date
-
-    # Author
-    # Summary
-    # Content
 
     while(1):
         try:
             # Read All Files
-            path = os.path.join(settings.BASE_DIR ,'documents/articles/Article_'+str(N))
+            path = os.path.join(settings.BASE_DIR ,'documents/web/article/Article_'+str(N))
 
             f = open(path, 'r')
 
@@ -119,6 +68,63 @@ def update_model(request):
     info.article_count = N
     info.version += 1
     ModelInfo.save(info)
+
+
+def index(request):
+    dict = {'insert_var': 'Value from algo computation from views.py ' + str(request)}
+    return render(request, 'first_app/index.html', context=dict)
+
+
+from django.views.decorators.csrf import csrf_exempt
+@csrf_exempt
+def help(request):
+    if request.method == "POST":
+        help_dict = {'page_index': request}
+        updateDataBase()
+        return render(request, 'first_app/help.html', context=help_dict)
+# Create your views here.
+
+def home(request):
+    return render(request, 'first_app/home.html')
+
+import subprocess
+
+def update_model(request):
+
+    # Get All Topics
+    subscriptions_list = "\'"
+    topics = Topic.objects.all()
+
+    for t in topics:
+        subscriptions_list += str(t)
+        subscriptions_list += ","
+
+    subscriptions_list = subscriptions_list[:-1]
+    subscriptions_list += "\'"
+
+    print("All subscriptions")
+    print(subscriptions_list)
+
+    # Used To Get Proper Path
+    path = os.path.join(settings.BASE_DIR, 'documents/doc2vec.py')
+
+
+    try:
+        f = open('./documents/web/main.py')
+    except:
+        print("unable to open file")
+
+    try:
+        print("Process Spawned!\n")
+        exe = './documents/web/main.py'
+        #exe = './documents/doc2vec.py'
+
+        p = subprocess.Popen(['/Users/Whelan/anaconda3/bin/python3.6', exe, subscriptions_list])
+    except:
+        print("Subprocess Not Initiated\n")
+
+
+    updateDataBase()
 
     return render(request, 'first_app/update_model.html')
 
@@ -178,8 +184,8 @@ def make_query(request):
 
             try:
                 # Load New Model if Exists
+                model = gensim.models.doc2vec.Doc2Vec.load(os.path.join(settings.BASE_DIR, 'documents/model_newest'))
                 print("Using Update Model\n")
-                model = gensim.models.doc2vec.Doc2Vec.load(os.path.join(settings.BASE_DIR, 'documents/model_new'))
             except:
                 # Load Model and Get Top 3 Similar Articles
                 print("Using Base Model\n")
