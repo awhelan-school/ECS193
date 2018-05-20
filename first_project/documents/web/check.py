@@ -3,6 +3,7 @@ import sys, io,re
 import regex
 from collections import defaultdict
 import datetime
+import json
 
 
 def update_key(data_base, url,kkey):
@@ -47,8 +48,33 @@ def check_date(data_base,key_word):
         return  int(re.sub(r'-', '', date))
     else:
         return 0
-            
 
+def load_keywords_info():
+    try:
+        with open('./documents/web/keywords.json', 'r') as fp:
+            data = json.load(fp)
+            return data
+    except json.decoder.JSONDecodeError:
+        return defaultdict(str)
+
+
+def save_keywords_info(data):
+    with open('./documents/web/keywords.json', 'w') as fp:
+        json.dump(data, fp)
+
+
+def load_url_info():
+    try:
+        with open('./documents/web/urls.json', 'r') as fp:
+            data = json.load(fp)
+            return data
+    except json.decoder.JSONDecodeError:
+        return defaultdict(list)
+
+
+def save_url_info(data):
+    with open('./documents/web/urls.json', 'w') as fp:
+        json.dump(data, fp)
 
 def load_previous(data_base):
     previous = []
@@ -57,17 +83,20 @@ def load_previous(data_base):
         for line in file:
             previous.append(line)
 
-        
+
+
         i = 0
         while i < len(previous):
 
             url = regex.get_data('>\s(.+?)\s<',previous[i+4])[0]
-            key = regex.get_data('>\s(.+?)\s<',previous[i+1])[0]     
-            date = regex.get_data('>\s(.+?)\s<',previous[i+5])[0]  
+            key = regex.get_data('>\s(.+?)\s<',previous[i+1])[0]
+            #date = regex.get_data('>\s(.+?)\s<',previous[i+5])[0]
 
-            data_base[url] = defaultdict(str)
-            data_base[url][key] = date
+            data_base[key].append(url)
+
+            #data_base[url][key] = date
             #data_base[url] = defaultdict(str)
+            #data_base[id]['id'] = previous[i]
             #data_base[key]['key'] = previous[i]
             #data_base[url]['title'] = previous[i+1]
             #data_base[url]['source'] = previous[i+2]
@@ -96,4 +125,17 @@ def check_last_update(url,date):
     return -1
 
 
+def MinEditDist(s1, s2):
+    if len(s1) > len(s2):
+        s1, s2 = s2, s1
 
+    distances = range(len(s1) + 1)
+    for i2, c2 in enumerate(s2):
+        distances_ = [i2+1]
+        for i1, c1 in enumerate(s1):
+            if c1 == c2:
+                distances_.append(distances[i1])
+            else:
+                distances_.append(1 + min((distances[i1], distances[i1 + 1], distances_[-1])))
+        distances = distances_
+    return distances[-1]

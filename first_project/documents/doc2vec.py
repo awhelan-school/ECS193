@@ -9,7 +9,7 @@ import smart_open
 import random
 import matplotlib.pyplot as plt
 import math
-
+import requests
 
 def plot_distribution(corpus):
 
@@ -139,7 +139,7 @@ def doc2vec(inputText):
     lee_train_file = test_data_dir + os.sep + 'lee_background.cor'
     lee_test_file = test_data_dir + os.sep + 'lee.cor'
 
-    tax_train_file = './documents/web/Article.bank'
+    tax_train_file = './documents/web/Articles.bank'
 
     # Read in the Corpus in the Doc2Vec specified format
     train_corpus = list(read_corpus(tax_train_file))
@@ -162,11 +162,11 @@ def doc2vec(inputText):
 
     model = gensim.models.doc2vec.Doc2Vec(vector_size=300, min_count=7, epochs=20, dm=1, window=5, workers=4)
     model.build_vocab(train_corpus)
-    models.Word2Vec.intersect_word2vec_format(model, fname='./GoogleNews-vectors-negative300.bin', binary=True)  # C binary format
+    models.Word2Vec.intersect_word2vec_format(model, fname='./documents/GoogleNews-vectors-negative300.bin', binary=True)  # C binary format
     model.train(train_corpus, total_examples=model.corpus_count, epochs=model.epochs)
 
 
-    # Convergence Plots/Tests 
+    # Convergence Plots/Tests
 
     # test_conv(model, train_corpus, 'r', 'unsupervised')
 
@@ -179,8 +179,9 @@ def doc2vec(inputText):
     #plt.show()
     #plt.legend()
     #plot_distribution(corpus=train_corpus)
-
-    model.save('model')
+    print("Saving Model.\n")
+    model.save('./documents/model')
+    requests.post('http://127.0.0.1:8000/help/')
 
 
 doc2vec('empty')

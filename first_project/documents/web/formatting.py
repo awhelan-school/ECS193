@@ -5,7 +5,7 @@ import re
 symbols = ['.',',','"',':','(',')',';','[',']','{','}','£','!','?','$','#','%','&',\
             '@','^','*','+','-','/','\\','<','>','“','”']
 
-
+'''
 def formatted_content_with_symbol(text):
     count_space = 0
     count_non_space = 0 
@@ -190,41 +190,68 @@ def formatted_content(text):
     line = re.sub(r'<br>\s+</a>', '</a> ', line)
 
     return line
+'''
 
+
+def formatted_content(text):
+    line = ''
+    for sentence in text:
+        sentence = re.sub(r'<[^>]*?>', '', sentence)
+        sentence = re.sub(r'&[^;]*?;', '', sentence)
+        sentence = re.sub(r'\n', ' ', sentence)
+        sentence = re.sub(r'[ ]+;', ' ', sentence)
+
+        if len(sentence) < 10:
+            continue
+
+        line += sentence
+        line += ' <br> '
+
+    line = line[:-6]
+    line = re.sub(r'\s+', ' ', line)
+    line += '\n'
+    
+    return line
 
 def formatted_id(id_):
-    return "<id> " +str(id_)+ " </id>\n"
+    #return "<id> " +str(id_)+ " </id>\n"
+    return str(id_)+ "\n"
 
 def formatted_key(key):
-    return "<key> " +key+ " </key>\n"
+    #return "<key> " +key+ " </key>\n"
+    return key+"\n"
 
 
 def formatted_title(title):
     line = ''
-    line += "<title> "
+    #line += "<title> "
     try:
         line += re.sub(r'&\S+?;', '',title)
     except IndexError:
         line += "None"
-    line += " </title>\n"
+    #line += " </title>\n"
+    line += "\n"
 
     return line
 
 
 def formatted_source(source):
-    return "<source> " +source+ " </source>\n"
+    #return "<source> " +source+ " </source>\n"
+    return source+ "\n"
 
 def formatted_url(url):
-    return "<url> " +url+ " </url>\n"
+    #return "<url> " +url+ " </url>\n"
+    return url+ "\n"
 
 def formatted_date(date):
     line = ''
-    line += "<date> "
-    try:
+    #line += "<date> "
+    if len(date) != 0:
         line += date
-    except IndexError:
+    else:
         line += "None"
-    line += " </date>\n"
+    #line += " </date>\n"
+    line += "\n"
 
     return line
 
@@ -234,13 +261,15 @@ def formatted_author(author,symbol):
     #if author == [] or author[0] == '':
     #    line += '<n> None Noue </n>\n'
     #else:
-    line += '<n> '
+    #line += '<n> '
     author = author.split(symbol)
     line += author[0]
     for i in range(1,len(author)):
-        line += ' </n> <n> '
+        #line += ' </n> <n> '
+        line += ' and '
         line += author[i]
-    line += ' </n>\n'
+    #line += ' </n>\n'
+    line += '\n'
 
     return line
 
