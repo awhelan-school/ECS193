@@ -36,7 +36,7 @@ def updateDataBase():
     N = 0
 
     # Load New Model if Exists
-    model = gensim.models.doc2vec.Doc2Vec.load(os.path.join(settings.BASE_DIR, 'documents/model_newest'))
+    model = gensim.models.doc2vec.Doc2Vec.load(os.path.join(settings.BASE_DIR, 'documents/model'))
     bank = open('./documents/web/Articles.bank')
 
     while(1):
@@ -105,15 +105,21 @@ import subprocess
 def update_model(request):
 
     # Get All Topics
+    tc = 0
     subscriptions_list = "\'"
     topics = Topic.objects.all()
+
+
 
     for t in topics:
         subscriptions_list += str(t)
         subscriptions_list += ","
+        tc += 1
 
     subscriptions_list = subscriptions_list[:-1]
     subscriptions_list += "\'"
+
+    if tc == 0: subscriptions_list = ""
 
     print("All subscriptions")
     print(subscriptions_list)
@@ -132,9 +138,10 @@ def update_model(request):
         exe = './documents/web/main.py'
         #exe = './documents/doc2vec.py'
 
-        p = subprocess.Popen(['/Users/Whelan/anaconda3/bin/python3.6', exe, subscriptions_list])
+        p = subprocess.Popen(['python3', exe, subscriptions_list])
     except:
         print("Subprocess Not Initiated\n")
+
 
 
     return render(request, 'first_app/update_model.html')
