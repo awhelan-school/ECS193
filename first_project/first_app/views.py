@@ -33,7 +33,7 @@ def updateDataBase():
     print(info.article_count, info.version)
 
     # Populate The databases
-    N = 0
+    N = info.article_count
     l = []
     # Load New Model if Exists
     model = gensim.models.doc2vec.Doc2Vec.load(os.path.join(settings.BASE_DIR, 'documents/model'))
@@ -41,6 +41,7 @@ def updateDataBase():
 
     while(1):
         try:
+
             l.append(N)
             content = bank.readline()
             content = content.split()
@@ -66,8 +67,20 @@ def updateDataBase():
             N += 1
 
 
+            try:
+                key = key.rstrip('\n')
+                t = Topic.objects.filter(topic_name=key)
+                num = t[0].count
+                num += 1
+                Topic.objects.filter(topic_name=key).update(count=num)
+                print(num)
+            except:
+                print("Topic Exception\n", key, t.count)
+                pass
+
 
             try:
+
                 Article.objects.get_or_create(id = id, keyword = key, title = title, source = source,
                                               url = url, date = date,
                                               author=author, content = content, summary = summary,
@@ -95,7 +108,8 @@ def index(request):
 
         if n.isnumeric() :
             n = int(n)
-            Article.objects.filter(id=n).update(display=False)
+            a = Article.objects.filter(id=n).update(display=False)
+            print(a.embedding, type(a.embedding))
     except:
         pass
 
