@@ -1,5 +1,7 @@
 from django.db import models
 
+
+
 # Create your models here.
 
 class Topic(models.Model):
@@ -19,6 +21,7 @@ class AccessRecord(models.Model):
 
     def __str__(self):
         return str(self.date)
+
 
 class Article(models.Model):
     # Article ID
@@ -40,7 +43,9 @@ class Article(models.Model):
     # Full text
     content = models.TextField()
     # Vector Embedding
-    # embedding = models.CharField(max_length = 512)
+    embedding = models.CharField(max_length = 512)
+    # Display Article
+    display = models.BooleanField(default = True)
 
 # id
 # Keyword
@@ -55,6 +60,7 @@ class Article(models.Model):
 class ModelInfo(models.Model):
     article_count = models.IntegerField(unique=True)
     version = models.IntegerField()
+    sublist = models.TextField()
 
 
     def save(self, *args, **kwargs):

@@ -34,21 +34,21 @@ def updateDataBase():
 
     # Populate The databases
     N = 0
-
+    l = []
     # Load New Model if Exists
     model = gensim.models.doc2vec.Doc2Vec.load(os.path.join(settings.BASE_DIR, 'documents/model'))
     bank = open('./documents/web/Articles.bank')
 
     while(1):
         try:
-
+            l.append(N)
             content = bank.readline()
             content = content.split()
             inferred_vector = model.infer_vector(content)
 
 
             # Read All Files
-            path = os.path.join(settings.BASE_DIR ,'documents/web/article/Article_'+str(N))
+            path = os.path.join(settings.BASE_DIR ,'./documents/web/articles/Article_'+str(N))
 
             f = open(path, 'r')
 
@@ -61,8 +61,8 @@ def updateDataBase():
             date = f.readline()
 
             author = f.readline()
-            summary = f.readline()
-
+            content = f.readline()
+            summary = "#unknown"
             N += 1
 
 
@@ -70,7 +70,7 @@ def updateDataBase():
             try:
                 Article.objects.get_or_create(id = id, keyword = key, title = title, source = source,
                                               url = url, date = date,
-                                              author=author, summary = summary,
+                                              author=author, content = content, summary = summary,
                                               embedding = str(inferred_vector))
             except:
                 pass
@@ -80,11 +80,28 @@ def updateDataBase():
 
     info.article_count = N
     info.version += 1
+    info.sublist = l
     ModelInfo.save(info)
 
 
+
+
 def index(request):
-    dict = {'insert_var': 'Value from algo computation from views.py ' + str(request)}
+
+    try:
+        print('In request\n')
+        n = request.POST.get('remove_id',False)
+        print(n, type(n))
+
+        if n.isnumeric() :
+            n = int(n)
+            Article.objects.filter(id=n).update(display=False)
+    except:
+        pass
+
+    articles = Article.objects.filter(display = True)
+    dict = {'articles': articles}
+
     return render(request, 'first_app/index.html', context=dict)
 
 
@@ -106,7 +123,7 @@ def update_model(request):
 
     # Get All Topics
     tc = 0
-    subscriptions_list = "\'"
+    subscriptions_list = ""
     topics = Topic.objects.all()
 
 
@@ -117,7 +134,7 @@ def update_model(request):
         tc += 1
 
     subscriptions_list = subscriptions_list[:-1]
-    subscriptions_list += "\'"
+    #subscriptions_list += "\'"
 
     if tc == 0: subscriptions_list = ""
 
@@ -138,7 +155,7 @@ def update_model(request):
         exe = './documents/web/main.py'
         #exe = './documents/doc2vec.py'
 
-        p = subprocess.Popen(['python3', exe, subscriptions_list])
+        p = subprocess.Popen(['/Users/Whelan/anaconda3/bin/python3.6', exe, subscriptions_list])
     except:
         print("Subprocess Not Initiated\n")
 
@@ -202,7 +219,7 @@ def make_query(request):
 
             try:
                 # Load New Model if Exists
-                model = gensim.models.doc2vec.Doc2Vec.load(os.path.join(settings.BASE_DIR, 'documents/model_newest'))
+                model = gensim.models.doc2vec.Doc2Vec.load(os.path.join(settings.BASE_DIR, 'documents/model'))
                 print("Using Update Model\n")
             except:
                 # Load Model and Get Top 3 Similar Articles
