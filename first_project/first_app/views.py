@@ -187,6 +187,9 @@ def manage_subscriptions(request):
         selected_topic = request.POST['sub_topic']
         if selected_topic != '':
             Topic.objects.get_or_create(topic_name=selected_topic)[0]
+            # If articles already stored locally
+            a = Article.objects.filter(keyword = selected_topic)
+            Topic.object.filter(topic_name = selected_topic).update(count = len(a))
     except:
         pass
 
