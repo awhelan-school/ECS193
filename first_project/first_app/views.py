@@ -26,6 +26,42 @@ import collections
 import smart_open
 import random
 
+def writeEmbeddings(count):
+
+    f = open("./documents/embeddings.js", "w+")
+    fw = open("./documents/lin.sub.js", "w+")
+    format = open("./documents/format.js", 'r+')
+
+    for j in range(0,count):
+        print('Count:', j)
+        a = Article.objects.filter(id = j)
+        f.write("[")
+        f.write("\""+str(a[0].id)+"\",")
+        f.write("\""+str(a[0].source)+"\",")
+
+        vec = a[0].embedding
+        vec = vec[1:-1]
+        vec = vec.split()
+
+        for i in range(0, len(vec)):
+            if i < 299:
+                f.write("\""+str(float(vec[i]))+"\",")
+            else:
+                f.write("\""+str(float(vec[i]))+"\"")
+
+        f.write("],\n")
+
+    f.seek(0)
+
+    fw.write(format.readline())
+    fw.write(format.readline())
+
+    for line in f:
+        fw.write(line)
+
+    fw.write(format.readline())
+
+
 def updateDataBase():
 
     info = ModelInfo.load()
@@ -57,6 +93,7 @@ def updateDataBase():
             key = f.readline()
             title = f.readline()
             source = f.readline()
+            source = source.rstrip('\n')
             url = f.readline()
             url = url.rstrip('\n')
             date = f.readline()
@@ -95,6 +132,8 @@ def updateDataBase():
     info.version += 1
     info.sublist = l
     ModelInfo.save(info)
+
+    writeEmbeddings(N)
 
 
 
@@ -165,11 +204,9 @@ def update_model(request):
         print("unable to open file")
 
     try:
-        print("Process Spawned!\n")
         exe = './documents/web/main.py'
-        #exe = './documents/doc2vec.py'
-
-        p = subprocess.Popen(['/Users/Whelan/anaconda3/bin/python3.6', exe, subscriptions_list])
+        p = subprocess.Popen(['python3', exe, subscriptions_list])
+        print("Process Spawned!\n")
     except:
         print("Subprocess Not Initiated\n")
 
